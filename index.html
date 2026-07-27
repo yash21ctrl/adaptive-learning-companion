@@ -1104,7 +1104,7 @@
             document.getElementById('quiz-complete-card').style.display = 'none';
 
             try {
-                const response = await fetch(`${API_BASE}/get-next-question`);
+                const response = await fetch(`${API_BASE}/get-next-question?participant_id=${encodeURIComponent(participantId)}`);
                 const q = await response.json();
 
                 document.getElementById('question-loading').style.display = 'none';
@@ -1318,7 +1318,7 @@
         // Reset Session Action
         async function resetSession() {
             try {
-                const response = await fetch(`${API_BASE}/reset-session`, {
+                const response = await fetch(`${API_BASE}/reset-session?participant_id=${encodeURIComponent(participantId)}`, {
                     method: 'POST'
                 });
                 const result = await response.json();

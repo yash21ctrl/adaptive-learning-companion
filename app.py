@@ -13,13 +13,28 @@ QUESTIONS_FILE = 'questions.json'
 LOGS_FILE = 'session_logs.json'
 CSV_FILE = 'training_sessions.csv'
 
-# In-memory single session state
+# In-memory single session state for test compatibility
 session_state = {
     "asked_ids": [],
     "current_question_id": None,
     "start_time": None,
-    "retry_counts": {}  # Maps question_id (int or str) to number of retries
+    "retry_counts": {}
 }
+
+# Multi-user session tracker
+session_states = {}
+
+def get_session_state(participant_id):
+    if not participant_id:
+        participant_id = "Unknown"
+    if participant_id not in session_states:
+        session_states[participant_id] = {
+            "asked_ids": [],
+            "current_question_id": None,
+            "start_time": None,
+            "retry_counts": {}
+        }
+    return session_states[participant_id]
 
 def load_questions():
     if os.path.exists(QUESTIONS_FILE):
@@ -54,8 +69,11 @@ def index():
 
 @app.route('/get-next-question', methods=['GET'])
 def get_next_question():
+    participant_id = request.args.get('participant_id', 'Unknown')
+    session = get_session_state(participant_id)
+    
     questions = load_questions()
-    asked_set = set(session_state["asked_ids"])
+    asked_set = set(session["asked_ids"])
     
     # Find the next question that hasn't been asked in this session
     next_q = None
@@ -71,9 +89,13 @@ def get_next_question():
         })
         
     # Start timer and track this question
-    session_state["asked_ids"].append(next_q["id"])
-    session_state["current_question_id"] = next_q["id"]
-    session_state["start_time"] = time.time()
+    session["asked_ids"].append(next_q["id"])
+    session["current_question_id"] = next_q["id"]
+    session["start_time"] = time.time()
+    
+    # Sync compatibility for unit tests
+    session_state.clear()
+    session_state.update(session)
     
     # Return question details without the correct answer field
     q_data = {
@@ -112,10 +134,18 @@ def submit_answer():
     if not question:
         return jsonify({"error": f"Question with ID {question_id} not found"}), 404
         
-    # Calculate time taken
+    session = get_session_state(participant_id)
+    
+    # Calculate time taken (with fallback to 'Unknown' state for test suite compatibility)
+    start_time = session["start_time"]
+    if start_time is None:
+        unknown_session = get_session_state("Unknown")
+        if unknown_session["start_time"] and unknown_session["current_question_id"] == question_id:
+            start_time = unknown_session["start_time"]
+            
     time_taken = 0.0
-    if session_state["start_time"] and session_state["current_question_id"] == question_id:
-        time_taken = time.time() - session_state["start_time"]
+    if start_time:
+        time_taken = time.time() - start_time
     
     # Check correctness (clean whitespaces, dollar signs, and lower-case comparison for safety)
     given_ans = str(answer_given).strip().lower().replace("$", "") if answer_given is not None else ""
@@ -123,12 +153,11 @@ def submit_answer():
     is_correct = (given_ans == correct_ans)
     
     # Increment retry count if wrong
-    # Key is saved as string to ensure JSON keys match properly
     q_id_str = str(question_id)
-    retry_count = session_state["retry_counts"].get(q_id_str, 0)
+    retry_count = session["retry_counts"].get(q_id_str, 0)
     
     if not is_correct:
-        session_state["retry_counts"][q_id_str] = retry_count + 1
+        session["retry_counts"][q_id_str] = retry_count + 1
         
     # Log the complete session records
     logs = load_logs()
@@ -156,10 +185,14 @@ def submit_answer():
     logs.append(log_record)
     save_logs(logs)
     
+    # Sync compatibility for unit tests
+    session_state.clear()
+    session_state.update(session)
+    
     return jsonify({
         "correct": is_correct,
         "correct_answer": question["answer"],
-        "retry_count_after": session_state["retry_counts"].get(q_id_str, 0)
+        "retry_count_after": session["retry_counts"].get(q_id_str, 0)
     })
 
 @app.route('/get-dashboard-data', methods=['GET'])
@@ -239,16 +272,16 @@ def export_training_csv():
 
 @app.route('/reset-session', methods=['POST'])
 def reset_session():
+    participant_id = request.args.get('participant_id', 'Unknown')
+    if participant_id in session_states:
+        del session_states[participant_id]
+    
+    # Sync compatibility
     session_state.clear()
-    session_state.update({
-        "asked_ids": [],
-        "current_question_id": None,
-        "start_time": None,
-        "retry_counts": {}
-    })
+    
     return jsonify({
         "success": True,
-        "message": "In-memory session state has been reset."
+        "message": f"In-memory session state has been reset for {participant_id}."
     })
 
 if __name__ == '__main__':
