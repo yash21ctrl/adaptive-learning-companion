@@ -791,7 +791,10 @@
                     <!-- Dynamic rendering of text inputs or button arrays -->
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; width: 100%;">
+                    <button class="btn btn-outline" id="btn-skip" onclick="handleSkip()" style="border-color: rgba(255,255,255,0.15); color: var(--text-secondary); display: none; padding: 0.6rem 1.2rem; font-size: 0.95rem;">
+                        Skip Question
+                    </button>
                     <button class="btn btn-primary" id="btn-submit" onclick="handleSubmit()">
                         Submit Response
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -906,6 +909,7 @@
         // State trackers
         let currentQuestion = null;
         let selectedMCQAnswer = null;
+        let isSkipping = false;
 
         // Telemetry Variables
         let tabSwitches = 0;
@@ -1055,6 +1059,9 @@
             document.getElementById('question-loading').style.display = 'block';
             document.getElementById('active-question-card').style.display = 'none';
             document.getElementById('quiz-complete-card').style.display = 'none';
+            
+            // Hide skip button initially for new questions
+            document.getElementById('btn-skip').style.display = 'none';
 
             try {
                 const response = await fetch(`${API_BASE}/get-next-question?participant_id=${encodeURIComponent(participantId)}`);
@@ -1166,16 +1173,31 @@
             overlay.classList.add('active');
         }
 
+        // Handle skip choice
+        function handleSkip() {
+            if (!currentQuestion) return;
+            stopTelemetryTimers();
+            isSkipping = true;
+            
+            // Open frustration modal
+            const overlay = document.getElementById('frustration-modal-overlay');
+            overlay.classList.add('active');
+        }
+
         // Send results and proceed
         async function selectFrustration(level) {
             // Close modal
             document.getElementById('frustration-modal-overlay').classList.remove('active');
 
             let answer = null;
-            if (currentQuestion.type === 'typing') {
-                answer = document.getElementById('answer-input').value.trim();
+            if (isSkipping) {
+                answer = "skipped";
             } else {
-                answer = selectedMCQAnswer;
+                if (currentQuestion.type === 'typing') {
+                    answer = document.getElementById('answer-input').value.trim();
+                } else {
+                    answer = selectedMCQAnswer;
+                }
             }
 
             const visualToggle = false;
@@ -1206,37 +1228,50 @@
                 
                 const result = await response.json();
                 
-                if (result.correct) {
-                    showToast(`✨ Correct! Nice job!`, 'success');
-                    // Refresh dashboard stats
+                if (isSkipping) {
+                    showToast("Question skipped.", "info");
+                    isSkipping = false;
                     loadDashboardData();
-                    // Load next question
                     setTimeout(() => {
                         loadNextQuestion();
                     }, 1500);
                 } else {
-                    showToast(`❌ Incorrect! Please try again.`, 'error');
-                    // Clear and focus input for typing questions
-                    if (currentQuestion.type === 'typing') {
-                        const input = document.getElementById('answer-input');
-                        if (input) {
-                            input.value = '';
-                            input.focus();
-                        }
+                    if (result.correct) {
+                        showToast(`✨ Correct! Nice job!`, 'success');
+                        // Refresh dashboard stats
+                        loadDashboardData();
+                        // Load next question
+                        setTimeout(() => {
+                            loadNextQuestion();
+                        }, 1500);
                     } else {
-                        // Deselect MCQ options
-                        document.querySelectorAll('.mcq-option').forEach(el => el.classList.remove('selected'));
-                        selectedMCQAnswer = null;
+                        showToast(`❌ Incorrect! Please try again.`, 'error');
+                        // Show skip button so they don't get stuck forever
+                        document.getElementById('btn-skip').style.display = 'inline-block';
+                        
+                        // Clear and focus input for typing questions
+                        if (currentQuestion.type === 'typing') {
+                            const input = document.getElementById('answer-input');
+                            if (input) {
+                                input.value = '';
+                                input.focus();
+                            }
+                        } else {
+                            // Deselect MCQ options
+                            document.querySelectorAll('.mcq-option').forEach(el => el.classList.remove('selected'));
+                            selectedMCQAnswer = null;
+                        }
+                        // Refresh dashboard stats
+                        loadDashboardData();
+                        // Resume timers to accumulate tracking metrics for the retry
+                        startTelemetryTimers();
                     }
-                    // Refresh dashboard stats
-                    loadDashboardData();
-                    // Resume timers to accumulate tracking metrics for the retry
-                    startTelemetryTimers();
                 }
 
             } catch (error) {
                 console.error("Error submitting answer:", error);
                 showToast("Submission failed. Check backend connection.", "error");
+                isSkipping = false;
                 // Re-enable timers if failed
                 startTelemetryTimers();
             }
