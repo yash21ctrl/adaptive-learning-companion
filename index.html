@@ -1208,17 +1208,31 @@
                 
                 if (result.correct) {
                     showToast(`✨ Correct! Nice job!`, 'success');
+                    // Refresh dashboard stats
+                    loadDashboardData();
+                    // Load next question
+                    setTimeout(() => {
+                        loadNextQuestion();
+                    }, 1500);
                 } else {
-                    showToast(`❌ Incorrect. Correct answer was: ${result.correct_answer}`, 'error');
+                    showToast(`❌ Incorrect! Please try again.`, 'error');
+                    // Clear and focus input for typing questions
+                    if (currentQuestion.type === 'typing') {
+                        const input = document.getElementById('answer-input');
+                        if (input) {
+                            input.value = '';
+                            input.focus();
+                        }
+                    } else {
+                        // Deselect MCQ options
+                        document.querySelectorAll('.mcq-option').forEach(el => el.classList.remove('selected'));
+                        selectedMCQAnswer = null;
+                    }
+                    // Refresh dashboard stats
+                    loadDashboardData();
+                    // Resume timers to accumulate tracking metrics for the retry
+                    startTelemetryTimers();
                 }
-
-                // Refresh dashboard stats
-                loadDashboardData();
-                
-                // Load next question
-                setTimeout(() => {
-                    loadNextQuestion();
-                }, 1500);
 
             } catch (error) {
                 console.error("Error submitting answer:", error);
