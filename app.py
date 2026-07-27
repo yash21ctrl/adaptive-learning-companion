@@ -36,6 +36,45 @@ def get_session_state(participant_id):
         }
     return session_states[participant_id]
 
+# PostgreSQL Database Setup
+DATABASE_URL = os.environ.get("DATABASE_URL")
+use_postgres = False
+
+if DATABASE_URL:
+    try:
+        import psycopg2
+        conn = psycopg2.connect(DATABASE_URL)
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS session_logs (
+                    id SERIAL PRIMARY KEY,
+                    participant_id TEXT,
+                    device_type TEXT,
+                    question_id INT,
+                    answer_given TEXT,
+                    tab_switches INT,
+                    mouse_idle_time FLOAT,
+                    typing_pauses INT,
+                    backspaces INT,
+                    used_visual_toggle BOOLEAN,
+                    visual_level_used INT,
+                    frustration_label TEXT,
+                    correct BOOLEAN,
+                    retry_count INT,
+                    time_taken FLOAT,
+                    sub_skill TEXT,
+                    difficulty TEXT,
+                    timestamp TEXT
+                );
+            """)
+            conn.commit()
+        conn.close()
+        use_postgres = True
+        print("Connected to PostgreSQL successfully.")
+    except Exception as e:
+        print(f"PostgreSQL connection failed: {e}. Falling back to local JSON files.")
+        use_postgres = False
+
 def load_questions():
     if os.path.exists(QUESTIONS_FILE):
         try:
@@ -47,21 +86,61 @@ def load_questions():
     return []
 
 def load_logs():
-    if os.path.exists(LOGS_FILE):
+    if use_postgres:
         try:
-            with open(LOGS_FILE, 'r') as f:
-                return json.load(f)
+            import psycopg2
+            from psycopg2.extras import RealDictCursor
+            conn = psycopg2.connect(DATABASE_URL)
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT * FROM session_logs ORDER BY id ASC")
+                rows = cur.fetchall()
+            conn.close()
+            return [dict(row) for row in rows]
         except Exception as e:
-            print(f"Error reading {LOGS_FILE}: {e}")
+            print(f"Error loading logs from PostgreSQL: {e}")
             return []
-    return []
+    else:
+        if os.path.exists(LOGS_FILE):
+            try:
+                with open(LOGS_FILE, 'r') as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"Error reading {LOGS_FILE}: {e}")
+                return []
+        return []
 
-def save_logs(logs):
-    try:
-        with open(LOGS_FILE, 'w') as f:
-            json.dump(logs, f, indent=2)
-    except Exception as e:
-        print(f"Error writing to {LOGS_FILE}: {e}")
+def save_log_record(record):
+    if use_postgres:
+        try:
+            import psycopg2
+            conn = psycopg2.connect(DATABASE_URL)
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO session_logs (
+                        participant_id, device_type, question_id, answer_given, 
+                        tab_switches, mouse_idle_time, typing_pauses, backspaces, 
+                        used_visual_toggle, visual_level_used, frustration_label, 
+                        correct, retry_count, time_taken, sub_skill, difficulty, timestamp
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    record["participant_id"], record["device_type"], record["question_id"], record["answer_given"],
+                    record["tab_switches"], record["mouse_idle_time"], record["typing_pauses"], record["backspaces"],
+                    record["used_visual_toggle"], record["visual_level_used"], record["frustration_label"],
+                    record["correct"], record["retry_count"], record["time_taken"], record["sub_skill"],
+                    record["difficulty"], record["timestamp"]
+                ))
+                conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Error saving log to PostgreSQL: {e}")
+    else:
+        logs = load_logs()
+        logs.append(record)
+        try:
+            with open(LOGS_FILE, 'w') as f:
+                json.dump(logs, f, indent=2)
+        except Exception as e:
+            print(f"Error writing to {LOGS_FILE}: {e}")
 
 @app.route('/')
 def index():
@@ -179,8 +258,6 @@ def submit_answer():
         session["retry_counts"][q_id_str] = retry_count + 1
         
     # Log the complete session records
-    logs = load_logs()
-    
     log_record = {
         "participant_id": participant_id,
         "device_type": device_type,
@@ -201,8 +278,7 @@ def submit_answer():
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     }
     
-    logs.append(log_record)
-    save_logs(logs)
+    save_log_record(log_record)
     
     # Sync compatibility for unit tests
     session_state.clear()
@@ -292,6 +368,28 @@ def export_training_csv():
 @app.route('/reset-session', methods=['POST'])
 def reset_session():
     participant_id = request.args.get('participant_id', 'Unknown')
+    
+    if use_postgres:
+        try:
+            import psycopg2
+            conn = psycopg2.connect(DATABASE_URL)
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM session_logs WHERE participant_id = %s", (participant_id,))
+                conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Error deleting logs from PostgreSQL: {e}")
+    else:
+        logs = load_logs()
+        # Keep only logs that belong to other participants
+        logs = [log for log in logs if log.get("participant_id") != participant_id]
+        try:
+            with open(LOGS_FILE, 'w') as f:
+                json.dump(logs, f, indent=2)
+        except Exception as e:
+            print(f"Error writing to {LOGS_FILE}: {e}")
+            
+    # Reset session_states cache
     if participant_id in session_states:
         del session_states[participant_id]
     
@@ -300,7 +398,7 @@ def reset_session():
     
     return jsonify({
         "success": True,
-        "message": f"In-memory session state has been reset for {participant_id}."
+        "message": f"In-memory and persistent session logs have been reset for {participant_id}."
     })
 
 if __name__ == '__main__':
