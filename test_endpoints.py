@@ -170,7 +170,7 @@ class TestAdaptiveLearningCompanion(unittest.TestCase):
             submit_data = {
                 "participant_id": "TestSubject_Multi",
                 "question_id": q['id'],
-                "answer_given": q['answer'] if i != 1 else "wrong",
+                "answer_given": q['answer'] if i != 1 else "x",
                 "tab_switches": i,
                 "mouse_idle_time": i * 1.5,
                 "typing_pauses": i,

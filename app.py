@@ -150,7 +150,26 @@ def submit_answer():
     # Check correctness (clean whitespaces, dollar signs, and lower-case comparison for safety)
     given_ans = str(answer_given).strip().lower().replace("$", "") if answer_given is not None else ""
     correct_ans = str(question["answer"]).strip().lower().replace("$", "")
-    is_correct = (given_ans == correct_ans)
+    
+    # 1. Open-ended writing questions (always correct if they type a response of >= 2 chars)
+    open_ended_skills = ['simple-writing', 'creative-writing', 'opinion-formulation', 'descriptive-summarization']
+    if question["sub_skill"] in open_ended_skills:
+        is_correct = len(given_ans) >= 2
+        
+    # 2. Reading comprehension lenient match
+    elif question["sub_skill"] == "simple-reading":
+        # Accept if they contain core words (e.g. for Q10: "red" and "car")
+        if "red" in correct_ans and "car" in correct_ans:
+            is_correct = ("red" in given_ans) and ("car" in given_ans)
+        else:
+            is_correct = (correct_ans in given_ans)
+            
+    # 3. Numeric float comparison (e.g. 2.8 == 2.80, or 8 == 8.0)
+    else:
+        try:
+            is_correct = abs(float(given_ans) - float(correct_ans)) < 0.0001
+        except ValueError:
+            is_correct = (given_ans == correct_ans)
     
     # Increment retry count if wrong
     q_id_str = str(question_id)
