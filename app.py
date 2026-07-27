@@ -39,41 +39,48 @@ def get_session_state(participant_id):
 # PostgreSQL Database Setup
 DATABASE_URL = os.environ.get("DATABASE_URL")
 use_postgres = False
+db_initialized = False
 
-if DATABASE_URL:
-    try:
-        import psycopg2
-        conn = psycopg2.connect(DATABASE_URL)
-        with conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS session_logs (
-                    id SERIAL PRIMARY KEY,
-                    participant_id TEXT,
-                    device_type TEXT,
-                    question_id INT,
-                    answer_given TEXT,
-                    tab_switches INT,
-                    mouse_idle_time FLOAT,
-                    typing_pauses INT,
-                    backspaces INT,
-                    used_visual_toggle BOOLEAN,
-                    visual_level_used INT,
-                    frustration_label TEXT,
-                    correct BOOLEAN,
-                    retry_count INT,
-                    time_taken FLOAT,
-                    sub_skill TEXT,
-                    difficulty TEXT,
-                    timestamp TEXT
-                );
-            """)
-            conn.commit()
-        conn.close()
-        use_postgres = True
-        print("Connected to PostgreSQL successfully.")
-    except Exception as e:
-        print(f"PostgreSQL connection failed: {e}. Falling back to local JSON files.")
-        use_postgres = False
+def init_db_if_needed():
+    global db_initialized, use_postgres
+    if db_initialized:
+        return
+    if DATABASE_URL:
+        try:
+            import psycopg2
+            # Set a 3-second connection timeout to prevent hanging on startup
+            conn = psycopg2.connect(DATABASE_URL, connect_timeout=3)
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS session_logs (
+                        id SERIAL PRIMARY KEY,
+                        participant_id TEXT,
+                        device_type TEXT,
+                        question_id INT,
+                        answer_given TEXT,
+                        tab_switches INT,
+                        mouse_idle_time FLOAT,
+                        typing_pauses INT,
+                        backspaces INT,
+                        used_visual_toggle BOOLEAN,
+                        visual_level_used INT,
+                        frustration_label TEXT,
+                        correct BOOLEAN,
+                        retry_count INT,
+                        time_taken FLOAT,
+                        sub_skill TEXT,
+                        difficulty TEXT,
+                        timestamp TEXT
+                    );
+                """)
+                conn.commit()
+            conn.close()
+            use_postgres = True
+            print("Connected to PostgreSQL successfully.")
+        except Exception as e:
+            print(f"PostgreSQL connection failed: {e}. Falling back to local JSON files.")
+            use_postgres = False
+    db_initialized = True
 
 def load_questions():
     if os.path.exists(QUESTIONS_FILE):
@@ -86,6 +93,7 @@ def load_questions():
     return []
 
 def load_logs():
+    init_db_if_needed()
     if use_postgres:
         try:
             import psycopg2
@@ -110,6 +118,7 @@ def load_logs():
         return []
 
 def save_log_record(record):
+    init_db_if_needed()
     if use_postgres:
         try:
             import psycopg2
@@ -368,6 +377,7 @@ def export_training_csv():
 @app.route('/reset-session', methods=['POST'])
 def reset_session():
     participant_id = request.args.get('participant_id', 'Unknown')
+    init_db_if_needed()
     
     if use_postgres:
         try:
