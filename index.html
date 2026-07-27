@@ -779,24 +779,7 @@
                     <span id="badge-skill" class="badge badge-skill">Sub skill</span>
                 </div>
 
-                <!-- Visual Aids Tool -->
-                <div class="visual-aid-panel">
-                    <div class="toggle-row">
-                        <span style="font-size: 0.9rem; font-weight: 500;">Enable Visual Support Aids</span>
-                        <label class="switch">
-                            <input type="checkbox" id="visual-toggle" onchange="toggleVisualSupport()">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div id="visual-slider-container" class="slider-control" style="display: none;">
-                        <div class="level-labels">
-                            <span>Level 1 (Line spacing)</span>
-                            <span>Level 2 (High contrast)</span>
-                            <span>Level 3 (Large font)</span>
-                        </div>
-                        <input type="range" id="visual-slider" min="1" max="3" value="1" class="range-slider" oninput="changeVisualLevel()">
-                    </div>
-                </div>
+
 
                 <!-- Text -->
                 <div class="question-text-container" id="question-text-container">
@@ -1062,39 +1045,7 @@
             });
         }
 
-        // Visual Support Controls
-        function toggleVisualSupport() {
-            const isChecked = document.getElementById('visual-toggle').checked;
-            const sliderContainer = document.getElementById('visual-slider-container');
-            const qContainer = document.getElementById('question-text-container');
-            const qText = document.getElementById('question-text');
 
-            if (isChecked) {
-                sliderContainer.style.display = 'flex';
-                changeVisualLevel();
-            } else {
-                sliderContainer.style.display = 'none';
-                qText.className = 'question-text visual-level-0';
-                qContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.15)';
-            }
-        }
-
-        function changeVisualLevel() {
-            const level = document.getElementById('visual-slider').value;
-            const qText = document.getElementById('question-text');
-            const qContainer = document.getElementById('question-text-container');
-
-            qText.className = `question-text visual-level-${level}`;
-            
-            // Give customized background highlights for extra levels
-            if (level == 1) {
-                qContainer.style.backgroundColor = 'rgba(99, 102, 241, 0.08)';
-            } else if (level == 2) {
-                qContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.45)';
-            } else if (level == 3) {
-                qContainer.style.backgroundColor = 'rgba(217, 70, 239, 0.08)';
-            }
-        }
 
         // Fetch Next Question
         async function loadNextQuestion() {
@@ -1227,8 +1178,8 @@
                 answer = selectedMCQAnswer;
             }
 
-            const visualToggle = document.getElementById('visual-toggle').checked;
-            const visualLevel = visualToggle ? parseInt(document.getElementById('visual-slider').value) : 0;
+            const visualToggle = false;
+            const visualLevel = 0;
 
             const payload = {
                 participant_id: participantId,
