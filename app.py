@@ -117,16 +117,10 @@ def submit_answer():
     if session_state["start_time"] and session_state["current_question_id"] == question_id:
         time_taken = time.time() - session_state["start_time"]
     
-    # Check correctness (clean whitespaces and lower-case comparison for safety)
-    given_ans = str(answer_given).strip().lower() if answer_given is not None else ""
-    
-    # Open-ended sub-skills are marked correct as long as the user entered a text response (length > 2)
-    open_ended_skills = ['simple-writing', 'creative-writing', 'opinion-formulation', 'descriptive-summarization']
-    if question["sub_skill"] in open_ended_skills:
-        is_correct = len(given_ans) >= 2
-    else:
-        correct_ans = str(question["answer"]).strip().lower()
-        is_correct = (given_ans == correct_ans)
+    # Check correctness (clean whitespaces, dollar signs, and lower-case comparison for safety)
+    given_ans = str(answer_given).strip().lower().replace("$", "") if answer_given is not None else ""
+    correct_ans = str(question["answer"]).strip().lower().replace("$", "")
+    is_correct = (given_ans == correct_ans)
     
     # Increment retry count if wrong
     # Key is saved as string to ensure JSON keys match properly
