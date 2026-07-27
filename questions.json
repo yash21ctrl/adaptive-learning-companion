@@ -1,0 +1,182 @@
+[
+  {
+    "id": 1,
+    "text": "Read this carefully: 'The brown dog barked at the mailman. Then it ran into the yard.' What animal is in the story?",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "simple-reading",
+    "answer": "dog",
+    "options": null
+  },
+  {
+    "id": 2,
+    "text": "Look at this pattern: 2, 4, 6, 8, __. What number comes next?",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "skip-counting",
+    "answer": "10",
+    "options": null
+  },
+  {
+    "id": 3,
+    "text": "Correct the typo in this sentence: 'I like to play video gams on my computer.' Retype the sentence correctly.",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "simple-spelling",
+    "answer": "I like to play video games on my computer.",
+    "options": null
+  },
+  {
+    "id": 4,
+    "text": "What is your favorite food and why do you like it? Write one short, complete sentence.",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "simple-writing",
+    "answer": "I like pizza because it is delicious.",
+    "options": null
+  },
+  {
+    "id": 5,
+    "text": "Which of these is a fruit?",
+    "type": "mcq",
+    "difficulty": "easy",
+    "sub_skill": "simple-classification",
+    "answer": "Apple",
+    "options": ["Carrot", "Apple", "Potato", "Broccoli"]
+  },
+  {
+    "id": 6,
+    "text": "Look at this text: '#####@#####'. Type the single character that is in the exact middle.",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "visual-search",
+    "answer": "@",
+    "options": null
+  },
+  {
+    "id": 7,
+    "text": "Put these jumbled words in the correct order to make a proper sentence: 'cat the slept'",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "word-ordering",
+    "answer": "the cat slept",
+    "options": null
+  },
+  {
+    "id": 8,
+    "text": "What did you do yesterday? Write one short, complete sentence about it.",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "simple-writing",
+    "answer": "I went to school.",
+    "options": null
+  },
+  {
+    "id": 9,
+    "text": "If you have 5 candies and you eat 2 of them, how many candies do you have left?",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "math-word-problem",
+    "answer": "3",
+    "options": null
+  },
+  {
+    "id": 10,
+    "text": "Remember this phrase: 'GREEN BANANA'. We will ask you to type it in the next question. Select what color the banana is.",
+    "type": "mcq",
+    "difficulty": "easy",
+    "sub_skill": "memory-retention",
+    "answer": "Green",
+    "options": ["Yellow", "Red", "Green", "Blue"]
+  },
+  {
+    "id": 11,
+    "text": "Type the two-word phrase you were asked to remember in the last question (in lowercase or uppercase).",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "memory-recall",
+    "answer": "green banana",
+    "options": null
+  },
+  {
+    "id": 12,
+    "text": "Which word is spelled correctly?",
+    "type": "mcq",
+    "difficulty": "easy",
+    "sub_skill": "spelling-check",
+    "answer": "Because",
+    "options": ["Becuse", "Because", "Becauses", "Becos"]
+  },
+  {
+    "id": 13,
+    "text": "Read this: 'Tim has a red toy car. Amy has a blue doll.' Who has the blue doll?",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "simple-reading",
+    "answer": "Amy",
+    "options": null
+  },
+  {
+    "id": 14,
+    "text": "If today is Monday, what day will it be tomorrow?",
+    "type": "mcq",
+    "difficulty": "easy",
+    "sub_skill": "simple-logic",
+    "answer": "Tuesday",
+    "options": ["Sunday", "Tuesday", "Wednesday", "Friday"]
+  },
+  {
+    "id": 15,
+    "text": "Look at this pattern: 'o o o x o o'. Which position is the 'x' in? (Count from 1 to 6)",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "visual-search",
+    "answer": "4",
+    "options": null
+  },
+  {
+    "id": 16,
+    "text": "Retype this phrase exactly as it is: 'keep typing calmly'",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "copy-typing",
+    "answer": "keep typing calmly",
+    "options": null
+  },
+  {
+    "id": 17,
+    "text": "If you buy a toy for $4.00 and pay with a $5.00 bill, how much change do you get back?",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "simple-money",
+    "answer": "$1.00",
+    "options": null
+  },
+  {
+    "id": 18,
+    "text": "Select the word that is the opposite of 'Hot'.",
+    "type": "mcq",
+    "difficulty": "easy",
+    "sub_skill": "vocabulary-opposite",
+    "answer": "Cold",
+    "options": ["Warm", "Cold", "Dry", "Bright"]
+  },
+  {
+    "id": 19,
+    "text": "Describe what you can see in the room you are sitting in. Write one short sentence.",
+    "type": "typing",
+    "difficulty": "easy",
+    "sub_skill": "simple-writing",
+    "answer": "I see a window.",
+    "options": null
+  },
+  {
+    "id": 20,
+    "text": "Select the number that is larger than 50 but smaller than 60.",
+    "type": "mcq",
+    "difficulty": "easy",
+    "sub_skill": "number-comparison",
+    "answer": "55",
+    "options": ["45", "55", "65", "75"]
+  }
+]

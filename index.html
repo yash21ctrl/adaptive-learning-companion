@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Learning Companion - Portal & Analytics</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at 50% 50%, #121026 0%, #07050f 100%);
+            --panel-bg: rgba(25, 22, 53, 0.65);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --accent: #d946ef;
+            --accent-glow: rgba(217, 70, 239, 0.4);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --transition-speed: 0.3s;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a5b4fc 0%, #f472b6 50%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        /* Layout Grid */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr; /* Default single column for participants */
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glassmorphic Panel Base */
+        .glass-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Active Question Layout */
+        .question-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: relative;
+        }
+
+        .badge-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-difficulty-easy {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-difficulty-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-difficulty-hard {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge-skill {
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .question-text-container {
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            border-radius: 12px;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .question-text {
+            font-size: 1.35rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            transition: all var(--transition-speed);
+        }
+
+        /* Visual Support Styling Rules */
+        .visual-level-0 {
+            /* Standard */
+        }
+        .visual-level-1 {
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            line-height: 1.9;
+        }
+        .visual-level-2 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #fbbf24;
+            letter-spacing: 0.06em;
+            line-height: 2.0;
+        }
+        .visual-level-3 {
+            font-weight: 900;
+            font-size: 1.8rem;
+            color: #d946ef;
+            text-shadow: 0 0 10px rgba(217, 70, 239, 0.3);
+            letter-spacing: 0.08em;
+            line-height: 2.2;
+        }
+
+        /* Input Elements */
+        .input-wrapper {
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .typing-input {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: white;
+            outline: none;
+            transition: all var(--transition-speed);
+        }
+
+        .typing-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* MCQ Options list */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            width: 100%;
+        }
+
+        .mcq-option {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            font-size: 1.05rem;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .mcq-option:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(4px);
+        }
+
+        .mcq-option.selected {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, rgba(217, 70, 239, 0.1) 100%);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+            font-weight: 600;
+        }
+
+        .option-marker {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .mcq-option.selected .option-marker {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* Action Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-disabled {
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: var(--text-secondary) !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        /* Visual Aids Toggle Control */
+        .visual-aid-panel {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.15);
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        .slider-control {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .level-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 5px var(--primary-glow);
+        }
+
+        /* Right Side Panels: Telemetry & Dashboard */
+        .right-sidebar {
+            display: none; /* Hidden by default for participants */
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Telemetry Live Dashboard Card */
+        .telemetry-card {
+            background: linear-gradient(135deg, rgba(25, 22, 53, 0.8) 0%, rgba(13, 10, 31, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .telemetry-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .telemetry-val {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.2rem;
+        }
+
+        .telemetry-lbl {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        /* Dashboard Statistics Card */
+        .dashboard-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-sm {
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .stats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 280px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding-right: 0.25rem;
+        }
+
+        .stats-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .stats-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .stats-item {
+            background: rgba(0, 0, 0, 0.12);
+            border-radius: 10px;
+            padding: 0.75rem;
+        }
+
+        .stats-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .stats-name {
+            font-weight: 600;
+            color: #d1d5db;
+        }
+
+        .stats-ratio {
+            color: var(--text-secondary);
+        }
+
+        .progress-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hidden-telemetry {
+            filter: blur(6px);
+            opacity: 0.35;
+            transition: filter 0.3s ease, opacity 0.3s ease;
+        }
+
+        /* Success Rate Circle Chart */
+        .no-data-msg {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            padding: 2rem 0;
+            font-style: italic;
+        }
+
+        /* Modal Overlay & Frustration Box */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(7, 5, 15, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .frustration-modal {
+            background: #191635;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 2rem;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-align: center;
+        }
+
+        .modal-overlay.active .frustration-modal {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.75rem;
+        }
+
+        .modal-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .frustration-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .frust-btn {
+            padding: 0.9rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            color: white;
+        }
+
+        .frust-low {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        .frust-low:hover {
+            background: rgba(16, 185, 129, 0.25);
+            border-color: var(--success);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .frust-med {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        .frust-med:hover {
+            background: rgba(245, 158, 11, 0.25);
+            border-color: var(--warning);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .frust-high {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        .frust-high:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: var(--danger);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.25);
+            transform: translateY(-2px);
+        }
+
+        /* Alert/Notification Box */
+        .toast-box {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            opacity: 0;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            color: white;
+            z-index: 1001;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toast-box.active {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .toast-error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .toast-info {
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        /* Keyframe Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Custom scrollbar */
+        body::-webkit-scrollbar {
+            width: 8px;
+        }
+        body::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        body::-webkit-scrollbar-track {
+            background: #07050f;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Adaptive Learning Companion</h1>
+        <div class="subtitle">Smart telemetry-based evaluation & dashboard interface</div>
+    </header>
+
+    <div class="container" id="main-container">
+        <!-- Active Question Panel -->
+        <main class="glass-panel question-section">
+            <h2 class="panel-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m.08 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+                Current Challenge
+            </h2>
+
+            <div id="question-loading" style="display: none; text-align: center; padding: 2rem;">
+                <p style="color: var(--text-secondary);">Loading next question...</p>
+            </div>
+
+            <div id="quiz-complete-card" style="display: none; text-align: center; padding: 3rem 1rem;">
+                <h3 style="font-size: 1.8rem; font-weight: 800; color: #a5b4fc; margin-bottom: 1rem;">🎉 All Done!</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem; max-width: 450px; margin-left: auto; margin-right: auto;">
+                    You've finished all 10 evaluation questions. Look at your dashboard to see your performance by sub-skill, or export the telemetry to training_sessions.csv.
+                </p>
+                <button class="btn btn-primary" onclick="resetSession()">Restart Evaluation Session</button>
+            </div>
+
+            <div id="active-question-card" class="question-section">
+                <!-- Badges -->
+                <div class="badge-row">
+                    <span id="badge-difficulty" class="badge">Difficulty</span>
+                    <span id="badge-skill" class="badge badge-skill">Sub skill</span>
+                </div>
+
+                <!-- Visual Aids Tool -->
+                <div class="visual-aid-panel">
+                    <div class="toggle-row">
+                        <span style="font-size: 0.9rem; font-weight: 500;">Enable Visual Support Aids</span>
+                        <label class="switch">
+                            <input type="checkbox" id="visual-toggle" onchange="toggleVisualSupport()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div id="visual-slider-container" class="slider-control" style="display: none;">
+                        <div class="level-labels">
+                            <span>Level 1 (Line spacing)</span>
+                            <span>Level 2 (High contrast)</span>
+                            <span>Level 3 (Large font)</span>
+                        </div>
+                        <input type="range" id="visual-slider" min="1" max="3" value="1" class="range-slider" oninput="changeVisualLevel()">
+                    </div>
+                </div>
+
+                <!-- Text -->
+                <div class="question-text-container" id="question-text-container">
+                    <p id="question-text" class="question-text">Loading...</p>
+                </div>
+
+                <!-- Answer Form -->
+                <div class="input-wrapper" id="answer-container">
+                    <!-- Dynamic rendering of text inputs or button arrays -->
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                    <button class="btn btn-primary" id="btn-submit" onclick="handleSubmit()">
+                        Submit Response
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Hand Stats and Live Telemetry -->
+        <aside class="right-sidebar" id="main-sidebar">
+            
+            <!-- Live Telemetry Card -->
+            <section class="glass-panel telemetry-card">
+                <h2 class="panel-title" style="color: var(--accent);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                    Live Telemetry Monitor
+                </h2>
+                <div class="telemetry-grid">
+                    <div class="telemetry-item">
+                        <div class="telemetry-val hidden-telemetry" id="tele-time">0s</div>
+                        <div class="telemetry-lbl">Time Taken</div>
+                    </div>
+                    <div class="telemetry-item">
+                        <div class="telemetry-val hidden-telemetry" id="tele-tabs">0</div>
+                        <div class="telemetry-lbl">Tab Switches</div>
+                    </div>
+                    <div class="telemetry-item">
+                        <div class="telemetry-val hidden-telemetry" id="tele-idle">0s</div>
+                        <div class="telemetry-lbl">Mouse Idle</div>
+                    </div>
+                    <div class="telemetry-item">
+                        <div class="telemetry-val hidden-telemetry" id="tele-pauses">0</div>
+                        <div class="telemetry-lbl">Typing Pauses</div>
+                    </div>
+                    <div class="telemetry-item" style="grid-column: span 2;">
+                        <div class="telemetry-val hidden-telemetry" id="tele-backspace" style="color: #f472b6;">0</div>
+                        <div class="telemetry-lbl">Backspace Count</div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;">
+                    <label style="cursor: pointer; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; width: 100%;">
+                        <input type="checkbox" id="show-telemetry-cb" onchange="toggleTelemetryVisibility()" style="cursor: pointer;">
+                        Show Real-time Tracking (Debug Mode)
+                    </label>
+                </div>
+            </section>
+
+            <!-- Dashboard Performance Card -->
+            <section class="glass-panel dashboard-card">
+                <h2 class="panel-title" style="color: #a5b4fc; margin-bottom: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Sub-Skill Performance
+                </h2>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">
+                    <span>Subject ID: <strong id="current-participant-lbl" style="color: var(--accent);">None</strong></span>
+                    <button class="btn btn-sm btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; border-radius: 4px; display: inline-flex; height: auto;" onclick="promptChangeParticipant()">Change</button>
+                </div>
+                
+                <div class="stats-list" id="dashboard-stats-list">
+                    <!-- Dynamic rendering of sub-skill dashboard -->
+                    <div class="no-data-msg">No submissions recorded yet. Solve a problem to populate metrics.</div>
+                </div>
+
+                <div class="dashboard-actions">
+                    <button class="btn btn-sm btn-outline" style="flex: 1;" onclick="exportTrainingCsv()">Export CSV</button>
+                    <button class="btn btn-sm btn-outline" style="flex: 1;" onclick="resetSession()">Reset Session</button>
+                </div>
+            </section>
+
+        </aside>
+    </div>
+
+    <!-- Frustration Pop-up Modal -->
+    <div class="modal-overlay" id="frustration-modal-overlay">
+        <div class="frustration-modal">
+            <h3 class="modal-title">Frustration Self-Assessment</h3>
+            <p class="modal-desc">To help customize your experience, please rate how frustrated you felt during this question:</p>
+            <div class="frustration-options">
+                <button class="frust-btn frust-low" onclick="selectFrustration('Low')">
+                    😊 Low / Peaceful
+                </button>
+                <button class="frust-btn frust-med" onclick="selectFrustration('Medium')">
+                    😐 Medium / Focused
+                </button>
+                <button class="frust-btn frust-high" onclick="selectFrustration('High')">
+                    😤 High / Challenged
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Participant ID Modal -->
+    <div class="modal-overlay active" id="participant-modal-overlay">
+        <div class="frustration-modal" style="max-width: 400px; text-align: left;">
+            <h3 class="modal-title" style="text-align: center; margin-bottom: 1rem;">Study Welcome</h3>
+            <p class="modal-desc" style="line-height: 1.5; margin-bottom: 1.2rem;">
+                This portal evaluates learning responses to help train models for neurodiverse educational support. Please enter a Participant ID or pseudonym to begin:
+            </p>
+            <div class="input-wrapper" style="margin-bottom: 1.5rem;">
+                <input type="text" id="participant-id-input" class="typing-input" placeholder="e.g. Subject-001, P05..." autocomplete="off">
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="saveParticipantId()">Start Evaluation</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-box" id="toast-box">Notification message</div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let participantId = "";
+
+        function getDeviceType() {
+            const ua = navigator.userAgent;
+            if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+                return "Tablet";
+            }
+            if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(ua)) {
+                return "Mobile";
+            }
+            return "Desktop";
+        }
+
+        // State trackers
+        let currentQuestion = null;
+        let selectedMCQAnswer = null;
+
+        // Telemetry Variables
+        let tabSwitches = 0;
+        let mouseIdleSeconds = 0;
+        let mouseMovedThisSecond = false;
+        let typingPauses = 0;
+        let backspaceCount = 0;
+        let lastKeyPressTime = null;
+
+        // Timer identifiers
+        let mouseIdleTimer = null;
+        let questionElapsedTimer = null;
+        let questionStartTime = null;
+        let liveElapsedSeconds = 0;
+
+        // Show Toast Notifications
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast-box');
+            toast.textContent = message;
+            toast.className = 'toast-box active';
+            if (type === 'success') toast.classList.add('toast-success');
+            else if (type === 'error') toast.classList.add('toast-error');
+            else toast.classList.add('toast-info');
+
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 3000);
+        }
+
+        // Initialize Telemetry
+        function resetTelemetry() {
+            tabSwitches = 0;
+            mouseIdleSeconds = 0;
+            mouseMovedThisSecond = false;
+            typingPauses = 0;
+            backspaceCount = 0;
+            lastKeyPressTime = null;
+            selectedMCQAnswer = null;
+            
+            // Re-sync UI
+            updateTelemetryDisplay();
+        }
+
+        function updateTelemetryDisplay() {
+            document.getElementById('tele-tabs').textContent = tabSwitches;
+            document.getElementById('tele-idle').textContent = mouseIdleSeconds + 's';
+            document.getElementById('tele-pauses').textContent = typingPauses;
+            document.getElementById('tele-backspace').textContent = backspaceCount;
+            document.getElementById('tele-time').textContent = liveElapsedSeconds + 's';
+        }
+
+        function saveParticipantId() {
+            const val = document.getElementById('participant-id-input').value.trim();
+            if (!val) {
+                showToast("Please enter a Participant ID.", "error");
+                return;
+            }
+            participantId = val;
+            localStorage.setItem('participantId', participantId);
+            document.getElementById('current-participant-lbl').textContent = participantId;
+            document.getElementById('participant-modal-overlay').classList.remove('active');
+            
+            // Start timers and load question if we haven't already
+            if (!currentQuestion) {
+                loadNextQuestion();
+            }
+        }
+
+        function promptChangeParticipant() {
+            const current = localStorage.getItem('participantId') || '';
+            document.getElementById('participant-id-input').value = current;
+            document.getElementById('participant-modal-overlay').classList.add('active');
+        }
+
+        function toggleTelemetryVisibility() {
+            const isChecked = document.getElementById('show-telemetry-cb').checked;
+            const vals = document.querySelectorAll('.telemetry-val');
+            vals.forEach(val => {
+                if (isChecked) {
+                    val.classList.remove('hidden-telemetry');
+                } else {
+                    val.classList.add('hidden-telemetry');
+                }
+            });
+        }
+
+        // Start Telemetry Tracking Intervals
+        function startTelemetryTimers() {
+            // Track Mouse Idle time (1 second poll)
+            mouseMovedThisSecond = false;
+            if (mouseIdleTimer) clearInterval(mouseIdleTimer);
+            mouseIdleTimer = setInterval(() => {
+                if (!mouseMovedThisSecond) {
+                    mouseIdleSeconds++;
+                }
+                mouseMovedThisSecond = false;
+                updateTelemetryDisplay();
+            }, 1000);
+
+            // Track Question Duration (1 second poll)
+            questionStartTime = Date.now();
+            liveElapsedSeconds = 0;
+            if (questionElapsedTimer) clearInterval(questionElapsedTimer);
+            questionElapsedTimer = setInterval(() => {
+                liveElapsedSeconds = Math.round((Date.now() - questionStartTime) / 1000);
+                updateTelemetryDisplay();
+            }, 1000);
+        }
+
+        function stopTelemetryTimers() {
+            clearInterval(mouseIdleTimer);
+            clearInterval(questionElapsedTimer);
+        }
+
+        // Event Listeners for Global Telemetry
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                tabSwitches++;
+                updateTelemetryDisplay();
+            }
+        });
+
+        document.addEventListener('mousemove', () => {
+            mouseMovedThisSecond = true;
+        });
+
+        // Treat touch interactions on mobile/tablets as activity to ensure accurate idle tracking
+        document.addEventListener('touchstart', () => {
+            mouseMovedThisSecond = true;
+        });
+        document.addEventListener('touchmove', () => {
+            mouseMovedThisSecond = true;
+        });
+
+        // Typing inputs keydown tracking
+        function setupTypingTracking(inputElement) {
+            inputElement.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace') {
+                    backspaceCount++;
+                }
+
+                const now = Date.now();
+                if (lastKeypressTime) {
+                    const diff = now - lastKeyPressTime;
+                    if (diff > 1500) { // typing pause of 1.5s
+                        typingPauses++;
+                    }
+                }
+                lastKeyPressTime = now;
+                updateTelemetryDisplay();
+            });
+        }
+
+        // Visual Support Controls
+        function toggleVisualSupport() {
+            const isChecked = document.getElementById('visual-toggle').checked;
+            const sliderContainer = document.getElementById('visual-slider-container');
+            const qContainer = document.getElementById('question-text-container');
+            const qText = document.getElementById('question-text');
+
+            if (isChecked) {
+                sliderContainer.style.display = 'flex';
+                changeVisualLevel();
+            } else {
+                sliderContainer.style.display = 'none';
+                qText.className = 'question-text visual-level-0';
+                qContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.15)';
+            }
+        }
+
+        function changeVisualLevel() {
+            const level = document.getElementById('visual-slider').value;
+            const qText = document.getElementById('question-text');
+            const qContainer = document.getElementById('question-text-container');
+
+            qText.className = `question-text visual-level-${level}`;
+            
+            // Give customized background highlights for extra levels
+            if (level == 1) {
+                qContainer.style.backgroundColor = 'rgba(99, 102, 241, 0.08)';
+            } else if (level == 2) {
+                qContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.45)';
+            } else if (level == 3) {
+                qContainer.style.backgroundColor = 'rgba(217, 70, 239, 0.08)';
+            }
+        }
+
+        // Fetch Next Question
+        async function loadNextQuestion() {
+            resetTelemetry();
+            document.getElementById('question-loading').style.display = 'block';
+            document.getElementById('active-question-card').style.display = 'none';
+            document.getElementById('quiz-complete-card').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/get-next-question`);
+                const q = await response.json();
+
+                document.getElementById('question-loading').style.display = 'none';
+
+                if (q.finished) {
+                    document.getElementById('quiz-complete-card').style.display = 'block';
+                    currentQuestion = null;
+                    stopTelemetryTimers();
+                } else {
+                    document.getElementById('active-question-card').style.display = 'flex';
+                    currentQuestion = q;
+                    displayQuestion(q);
+                    startTelemetryTimers();
+                }
+            } catch (error) {
+                console.error("Error loading question:", error);
+                showToast("Could not load question. Check backend connection.", "error");
+                document.getElementById('question-loading').style.display = 'none';
+            }
+        }
+
+        // Display question structure on UI
+        function displayQuestion(q) {
+            // Text
+            document.getElementById('question-text').textContent = q.text;
+
+            // Difficulty Badge
+            const diffBadge = document.getElementById('badge-difficulty');
+            diffBadge.textContent = q.difficulty;
+            diffBadge.className = `badge badge-difficulty-${q.difficulty}`;
+
+            // Skill Badge
+            document.getElementById('badge-skill').textContent = q.sub_skill;
+
+            // Input Form rendering
+            const ansContainer = document.getElementById('answer-container');
+            ansContainer.innerHTML = '';
+
+            if (q.type === 'typing') {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = 'answer-input';
+                input.className = 'typing-input';
+                input.placeholder = 'Type your answer here...';
+                input.autocomplete = 'off';
+                ansContainer.appendChild(input);
+                setupTypingTracking(input);
+                input.focus();
+            } else if (q.type === 'mcq' && q.options) {
+                const optList = document.createElement('div');
+                optList.className = 'options-list';
+
+                q.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'mcq-option';
+                    
+                    const marker = document.createElement('span');
+                    marker.className = 'option-marker';
+                    marker.textContent = String.fromCharCode(65 + idx); // A, B, C, D
+                    
+                    const text = document.createElement('span');
+                    text.textContent = opt;
+
+                    btn.appendChild(marker);
+                    btn.appendChild(text);
+
+                    btn.onclick = () => {
+                        // De-select siblings
+                        document.querySelectorAll('.mcq-option').forEach(el => el.classList.remove('selected'));
+                        btn.classList.add('selected');
+                        selectedMCQAnswer = opt;
+                    };
+
+                    optList.appendChild(btn);
+                });
+                ansContainer.appendChild(optList);
+            }
+
+            // Sync visual support settings if toggle is checked
+            toggleVisualSupport();
+        }
+
+        // Submit Button Click
+        function handleSubmit() {
+            if (!currentQuestion) return;
+
+            // Validate that we have an answer
+            let answer = null;
+            if (currentQuestion.type === 'typing') {
+                answer = document.getElementById('answer-input').value.trim();
+                if (!answer) {
+                    showToast("Please enter an answer before submitting.", "error");
+                    return;
+                }
+            } else {
+                answer = selectedMCQAnswer;
+                if (!answer) {
+                    showToast("Please select an option before submitting.", "error");
+                    return;
+                }
+            }
+
+            // Temporarily stop counting timers, we preserve metrics until frustration modal choice
+            stopTelemetryTimers();
+
+            // Open frustration modal
+            const overlay = document.getElementById('frustration-modal-overlay');
+            overlay.classList.add('active');
+        }
+
+        // Send results and proceed
+        async function selectFrustration(level) {
+            // Close modal
+            document.getElementById('frustration-modal-overlay').classList.remove('active');
+
+            let answer = null;
+            if (currentQuestion.type === 'typing') {
+                answer = document.getElementById('answer-input').value.trim();
+            } else {
+                answer = selectedMCQAnswer;
+            }
+
+            const visualToggle = document.getElementById('visual-toggle').checked;
+            const visualLevel = visualToggle ? parseInt(document.getElementById('visual-slider').value) : 0;
+
+            const payload = {
+                participant_id: participantId,
+                device_type: getDeviceType(),
+                question_id: currentQuestion.id,
+                answer_given: answer,
+                tab_switches: tabSwitches,
+                mouse_idle_time: mouseIdleSeconds,
+                typing_pauses: typingPauses,
+                backspaces: backspaceCount,
+                used_visual_toggle: visualToggle,
+                visual_level_used: visualLevel,
+                frustration_label: level
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/submit-answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.correct) {
+                    showToast(`✨ Correct! Nice job!`, 'success');
+                } else {
+                    showToast(`❌ Incorrect. Correct answer was: ${result.correct_answer}`, 'error');
+                }
+
+                // Refresh dashboard stats
+                loadDashboardData();
+                
+                // Load next question
+                setTimeout(() => {
+                    loadNextQuestion();
+                }, 1500);
+
+            } catch (error) {
+                console.error("Error submitting answer:", error);
+                showToast("Submission failed. Check backend connection.", "error");
+                // Re-enable timers if failed
+                startTelemetryTimers();
+            }
+        }
+
+        // Load Dashboard Data
+        async function loadDashboardData() {
+            try {
+                const response = await fetch(`${API_BASE}/get-dashboard-data`);
+                const data = await response.json();
+
+                const list = document.getElementById('dashboard-stats-list');
+                list.innerHTML = '';
+
+                const skills = Object.keys(data);
+                if (skills.length === 0) {
+                    list.innerHTML = '<div class="no-data-msg">No submissions recorded yet. Solve a problem to populate metrics.</div>';
+                    return;
+                }
+
+                skills.forEach(skill => {
+                    const info = data[skill];
+                    const accuracy = info.attempts > 0 ? Math.round((info.correct / info.attempts) * 100) : 0;
+
+                    const item = document.createElement('div');
+                    item.className = 'stats-item';
+
+                    item.innerHTML = `
+                        <div class="stats-info">
+                            <span class="stats-name">${skill}</span>
+                            <span class="stats-ratio">${info.correct}/${info.attempts} (${accuracy}%)</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-bar" style="width: ${accuracy}%"></div>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            } catch (error) {
+                console.error("Error getting dashboard:", error);
+            }
+        }
+
+        // Reset Session Action
+        async function resetSession() {
+            try {
+                const response = await fetch(`${API_BASE}/reset-session`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                showToast(result.message, 'info');
+                
+                // Reload dashboard and load first question
+                loadDashboardData();
+                loadNextQuestion();
+            } catch (error) {
+                console.error("Error resetting session:", error);
+                showToast("Failed to reset session.", "error");
+            }
+        }
+
+        // Export training CSV to file & Trigger Browser Download
+        function exportTrainingCsv() {
+            // Direct browser download from the flask send_file attachment endpoint
+            window.location.href = `${API_BASE}/export-training-csv`;
+            showToast("Downloading training_sessions.csv...", "success");
+        }
+
+        // Premium: Client-side download generator so they can immediately download the CSV file in browser!
+        async function triggerClientCsvDownload() {
+            // Unused as we download directly from the server stream
+        }
+
+        // Initial setup
+        window.addEventListener('load', () => {
+            // Check for Admin/Researcher Mode
+            const urlParams = new URLSearchParams(window.location.search);
+            const isAdmin = urlParams.get('admin') === 'true';
+            const sidebar = document.getElementById('main-sidebar');
+            const container = document.getElementById('main-container');
+            
+            if (isAdmin) {
+                sidebar.style.display = 'flex';
+                container.style.gridTemplateColumns = '1.2fr 0.8fr';
+                loadDashboardData();
+            } else {
+                sidebar.style.display = 'none';
+                container.style.gridTemplateColumns = '1fr';
+            }
+            
+            const savedId = localStorage.getItem('participantId');
+            if (savedId) {
+                participantId = savedId;
+                document.getElementById('current-participant-lbl').textContent = participantId;
+                document.getElementById('participant-modal-overlay').classList.remove('active');
+                loadNextQuestion();
+            } else {
+                document.getElementById('participant-modal-overlay').classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
