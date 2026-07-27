@@ -900,20 +900,6 @@
         </div>
     </div>
 
-    <!-- Participant ID Modal -->
-    <div class="modal-overlay active" id="participant-modal-overlay">
-        <div class="frustration-modal" style="max-width: 400px; text-align: left;">
-            <h3 class="modal-title" style="text-align: center; margin-bottom: 1rem;">Study Welcome</h3>
-            <p class="modal-desc" style="line-height: 1.5; margin-bottom: 1.2rem;">
-                This portal evaluates learning responses to help train models for neurodiverse educational support. Please enter a Participant ID or pseudonym to begin:
-            </p>
-            <div class="input-wrapper" style="margin-bottom: 1.5rem;">
-                <input type="text" id="participant-id-input" class="typing-input" placeholder="e.g. Subject-001, P05..." autocomplete="off">
-            </div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="saveParticipantId()">Start Evaluation</button>
-        </div>
-    </div>
-
     <!-- Toast Notification -->
     <div class="toast-box" id="toast-box">Notification message</div>
 
@@ -986,27 +972,15 @@
             document.getElementById('tele-time').textContent = liveElapsedSeconds + 's';
         }
 
-        function saveParticipantId() {
-            const val = document.getElementById('participant-id-input').value.trim();
-            if (!val) {
-                showToast("Please enter a Participant ID.", "error");
-                return;
-            }
-            participantId = val;
-            localStorage.setItem('participantId', participantId);
-            document.getElementById('current-participant-lbl').textContent = participantId;
-            document.getElementById('participant-modal-overlay').classList.remove('active');
-            
-            // Start timers and load question if we haven't already
-            if (!currentQuestion) {
-                loadNextQuestion();
-            }
-        }
-
         function promptChangeParticipant() {
             const current = localStorage.getItem('participantId') || '';
-            document.getElementById('participant-id-input').value = current;
-            document.getElementById('participant-modal-overlay').classList.add('active');
+            const val = prompt("Enter new Participant ID:", current);
+            if (val !== null && val.trim() !== "") {
+                participantId = val.trim();
+                localStorage.setItem('participantId', participantId);
+                document.getElementById('current-participant-lbl').textContent = participantId;
+                showToast("Participant ID updated to: " + participantId, "success");
+            }
         }
 
         function toggleTelemetryVisibility() {
@@ -1388,15 +1362,17 @@
                 container.style.gridTemplateColumns = '1fr';
             }
             
-            const savedId = localStorage.getItem('participantId');
-            if (savedId) {
-                participantId = savedId;
-                document.getElementById('current-participant-lbl').textContent = participantId;
-                document.getElementById('participant-modal-overlay').classList.remove('active');
-                loadNextQuestion();
-            } else {
-                document.getElementById('participant-modal-overlay').classList.add('active');
+            let savedId = localStorage.getItem('participantId');
+            if (!savedId) {
+                // Self-generate a unique 6-character alphanumeric ID
+                savedId = 'sub-' + Math.random().toString(36).substr(2, 9).toUpperCase().substring(0, 6);
+                localStorage.setItem('participantId', savedId);
             }
+            participantId = savedId;
+            document.getElementById('current-participant-lbl').textContent = participantId;
+            
+            // Start the test immediately without prompting the user
+            loadNextQuestion();
         });
     </script>
 </body>
