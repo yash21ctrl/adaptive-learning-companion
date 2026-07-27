@@ -95,18 +95,21 @@ def load_questions():
 def load_logs():
     init_db_if_needed()
     if use_postgres:
+        conn = None
         try:
             import psycopg2
             from psycopg2.extras import RealDictCursor
-            conn = psycopg2.connect(DATABASE_URL)
+            conn = psycopg2.connect(DATABASE_URL, connect_timeout=3)
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute("SELECT * FROM session_logs ORDER BY id ASC")
                 rows = cur.fetchall()
-            conn.close()
             return [dict(row) for row in rows]
         except Exception as e:
             print(f"Error loading logs from PostgreSQL: {e}")
             return []
+        finally:
+            if conn:
+                conn.close()
     else:
         if os.path.exists(LOGS_FILE):
             try:
@@ -120,9 +123,10 @@ def load_logs():
 def save_log_record(record):
     init_db_if_needed()
     if use_postgres:
+        conn = None
         try:
             import psycopg2
-            conn = psycopg2.connect(DATABASE_URL)
+            conn = psycopg2.connect(DATABASE_URL, connect_timeout=3)
             with conn.cursor() as cur:
                 cur.execute("""
                     INSERT INTO session_logs (
@@ -139,9 +143,11 @@ def save_log_record(record):
                     record["difficulty"], record["timestamp"]
                 ))
                 conn.commit()
-            conn.close()
         except Exception as e:
             print(f"Error saving log to PostgreSQL: {e}")
+        finally:
+            if conn:
+                conn.close()
     else:
         logs = load_logs()
         logs.append(record)
@@ -239,9 +245,12 @@ def submit_answer():
     given_ans = str(answer_given).strip().lower().replace("$", "") if answer_given is not None else ""
     correct_ans = str(question["answer"]).strip().lower().replace("$", "")
     
-    # 1. Open-ended writing questions (always correct if they type a response of >= 2 chars)
+    # 1. Handle skips explicitly
     open_ended_skills = ['simple-writing', 'creative-writing', 'opinion-formulation', 'descriptive-summarization']
-    if question["sub_skill"] in open_ended_skills:
+    if given_ans == "skipped":
+        is_correct = False
+    # 2. Open-ended writing questions (always correct if they type a response of >= 2 chars)
+    elif question["sub_skill"] in open_ended_skills:
         is_correct = len(given_ans) >= 2
         
     # 2. Reading comprehension lenient match
@@ -380,15 +389,18 @@ def reset_session():
     init_db_if_needed()
     
     if use_postgres:
+        conn = None
         try:
             import psycopg2
-            conn = psycopg2.connect(DATABASE_URL)
+            conn = psycopg2.connect(DATABASE_URL, connect_timeout=3)
             with conn.cursor() as cur:
                 cur.execute("DELETE FROM session_logs WHERE participant_id = %s", (participant_id,))
                 conn.commit()
-            conn.close()
         except Exception as e:
             print(f"Error deleting logs from PostgreSQL: {e}")
+        finally:
+            if conn:
+                conn.close()
     else:
         logs = load_logs()
         # Keep only logs that belong to other participants
