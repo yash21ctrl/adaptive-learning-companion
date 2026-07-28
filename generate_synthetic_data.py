@@ -215,7 +215,7 @@ def main():
                     record["tab_switches"], record["mouse_idle_time"], record["typing_pauses"], record["backspaces"],
                     record["used_visual_toggle"], record["visual_level_used"], record["frustration_label"],
                     record["correct"], record["retry_count"], record["time_taken"], record["sub_skill"],
-                    record["difficulty"], timestamp_str
+                    record["difficulty"], timestamp_str, 'synthetic'
                 ))
             
             # Shift time forward for the next question
@@ -228,7 +228,7 @@ def main():
             participant_id, device_type, question_id, answer_given, 
             tab_switches, mouse_idle_time, typing_pauses, backspaces, 
             used_visual_toggle, visual_level_used, frustration_label, 
-            correct, retry_count, time_taken, sub_skill, difficulty, timestamp
+            correct, retry_count, time_taken, sub_skill, difficulty, timestamp, data_source
         ) VALUES %s
     """, insert_tuples)
     total_inserted = len(insert_tuples)

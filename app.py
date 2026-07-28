@@ -75,7 +75,8 @@ def init_db_if_needed():
                         time_taken FLOAT,
                         sub_skill TEXT,
                         difficulty TEXT,
-                        timestamp TEXT
+                        timestamp TEXT,
+                        data_source TEXT DEFAULT 'real'
                     );
                 """)
                 conn.commit()
@@ -138,14 +139,14 @@ def save_log_record(record):
                         participant_id, device_type, question_id, answer_given, 
                         tab_switches, mouse_idle_time, typing_pauses, backspaces, 
                         used_visual_toggle, visual_level_used, frustration_label, 
-                        correct, retry_count, time_taken, sub_skill, difficulty, timestamp
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        correct, retry_count, time_taken, sub_skill, difficulty, timestamp, data_source
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
                     record["participant_id"], record["device_type"], record["question_id"], record["answer_given"],
                     record["tab_switches"], record["mouse_idle_time"], record["typing_pauses"], record["backspaces"],
                     record["used_visual_toggle"], record["visual_level_used"], record["frustration_label"],
                     record["correct"], record["retry_count"], record["time_taken"], record["sub_skill"],
-                    record["difficulty"], record["timestamp"]
+                    record["difficulty"], record["timestamp"], record.get("data_source", "real")
                 ))
                 conn.commit()
         except Exception as e:
@@ -387,7 +388,8 @@ def export_training_csv():
         'mouse_idle_time', 
         'typing_pauses', 
         'used_visual_toggle', 
-        'frustration_label'
+        'frustration_label',
+        'data_source'
     ]
     
     try:
@@ -405,7 +407,8 @@ def export_training_csv():
                     'mouse_idle_time': log.get('mouse_idle_time', 0.0),
                     'typing_pauses': log.get('typing_pauses', 0),
                     'used_visual_toggle': 1 if log.get('used_visual_toggle') else 0,
-                    'frustration_label': log.get('frustration_label')
+                    'frustration_label': log.get('frustration_label'),
+                    'data_source': log.get('data_source', 'real')
                 }
                 writer.writerow(row)
                 
