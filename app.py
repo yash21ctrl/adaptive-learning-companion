@@ -161,6 +161,33 @@ def save_log_record(record):
 def index():
     return send_file('index.html')
 
+@app.route('/debug-db', methods=['GET'])
+def debug_db():
+    init_db_if_needed()
+    keys = list(os.environ.keys())
+    db_url_exists = "DATABASE_URL" in os.environ
+    db_url_space_exists = "DATABASE URL" in os.environ
+    
+    # Check connection test
+    connection_test = "Not tested"
+    if db_url_exists:
+        try:
+            import psycopg2
+            conn = psycopg2.connect(os.environ.get("DATABASE_URL"), connect_timeout=3)
+            conn.close()
+            connection_test = "Success!"
+        except Exception as e:
+            connection_test = f"Failed: {e}"
+            
+    return jsonify({
+        "use_postgres": use_postgres,
+        "db_initialized": db_initialized,
+        "db_url_exists": db_url_exists,
+        "db_url_space_exists": db_url_space_exists,
+        "connection_test": connection_test,
+        "env_keys": keys
+    })
+
 @app.route('/get-next-question', methods=['GET'])
 def get_next_question():
     participant_id = request.args.get('participant_id', 'Unknown')
