@@ -37,7 +37,12 @@ def get_session_state(participant_id):
     return session_states[participant_id]
 
 # PostgreSQL Database Setup
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = (
+    os.environ.get("DATABASE_URL") or 
+    os.environ.get("External_Database_URl") or 
+    os.environ.get("External_Database_URL") or 
+    os.environ.get("DATABASE URL")
+)
 use_postgres = False
 db_initialized = False
 
@@ -165,15 +170,14 @@ def index():
 def debug_db():
     init_db_if_needed()
     keys = list(os.environ.keys())
-    db_url_exists = "DATABASE_URL" in os.environ
-    db_url_space_exists = "DATABASE URL" in os.environ
+    db_url_exists = DATABASE_URL is not None
     
     # Check connection test
     connection_test = "Not tested"
     if db_url_exists:
         try:
             import psycopg2
-            conn = psycopg2.connect(os.environ.get("DATABASE_URL"), connect_timeout=3)
+            conn = psycopg2.connect(DATABASE_URL, connect_timeout=3)
             conn.close()
             connection_test = "Success!"
         except Exception as e:
@@ -183,7 +187,7 @@ def debug_db():
         "use_postgres": use_postgres,
         "db_initialized": db_initialized,
         "db_url_exists": db_url_exists,
-        "db_url_space_exists": db_url_space_exists,
+        "resolved_db_url_prefix": DATABASE_URL[:30] + "..." if DATABASE_URL else None,
         "connection_test": connection_test,
         "env_keys": keys
     })
