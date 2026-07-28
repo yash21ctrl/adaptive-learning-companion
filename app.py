@@ -253,7 +253,7 @@ def submit_answer():
     elif question["sub_skill"] in open_ended_skills:
         is_correct = len(given_ans) >= 2
         
-    # 2. Reading comprehension lenient match
+    # 3. Reading comprehension lenient match
     elif question["sub_skill"] == "simple-reading":
         # Accept if they contain core words (e.g. for Q10: "red" and "car")
         if "red" in correct_ans and "car" in correct_ans:
@@ -261,7 +261,14 @@ def submit_answer():
         else:
             is_correct = (correct_ans in given_ans)
             
-    # 3. Numeric float comparison (e.g. 2.8 == 2.80, or 8 == 8.0)
+    # 4. Missing operator lenient match (e.g. for Q15: "8 __ 4 __ 2 = 6")
+    elif question["sub_skill"] == "missing-operator":
+        has_minus = ('-' in given_ans or 'minus' in given_ans)
+        has_plus = ('+' in given_ans or 'plus' in given_ans or 'add' in given_ans)
+        has_divide = ('/' in given_ans or 'divide' in given_ans or 'div' in given_ans)
+        is_correct = (has_minus and (has_plus or has_divide))
+            
+    # 5. Numeric float comparison (e.g. 2.8 == 2.80, or 8 == 8.0)
     else:
         try:
             is_correct = abs(float(given_ans) - float(correct_ans)) < 0.0001
