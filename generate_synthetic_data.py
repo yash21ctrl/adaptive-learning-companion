@@ -40,9 +40,6 @@ PROFILES = [
 ] + [
     # 5 Dyscalculia
     {"id": f"sim-DYSC{i:03d}", "type": "Dyscalculia"} for i in range(1, 6)
-] + [
-    # 5 Dyslexia
-    {"id": f"sim-DYSX{i:03d}", "type": "Dyslexia"} for i in range(1, 6)
 ]
 
 def generate_telemetry_for_question(profile_type, question):
