@@ -46,6 +46,158 @@ DATABASE_URL = (
 use_postgres = False
 db_initialized = False
 
+import google.generativeai as genai
+import random
+
+# Configure Gemini API
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    print("Gemini API configured successfully.")
+else:
+    print("WARNING: GEMINI_API_KEY environment variable not set. Running in offline/mock mode.")
+
+# Load pre-trained frustration classifier model
+clf = None
+MODEL_FILE = "frustration_model.joblib"
+if os.path.exists(MODEL_FILE):
+    try:
+        import joblib
+        clf = joblib.load(MODEL_FILE)
+        print("Frustration classifier model loaded successfully.")
+    except Exception as e:
+        print(f"Error loading model from {MODEL_FILE}: {e}. Falling back to rule-based mock model.")
+else:
+    print(f"Model file {MODEL_FILE} not found. Running with rule-based mock model.")
+
+# Reset Mission Pool
+RESET_MISSIONS_POOL = [
+    {
+        "type": "silly_question",
+        "prompt": "Kip wants to know: What is your absolute favorite snack right now? 🍕🍫"
+    },
+    {
+        "type": "silly_question",
+        "prompt": "If you could have any superhero power right now, what would it be? 🦸‍♂️✨"
+    },
+    {
+        "type": "physical_reset",
+        "prompt": "Kip says: Time for a stretch! Reach for the sky, touch your toes, and count to 5. 🤸‍♂️"
+    },
+    {
+        "type": "physical_reset",
+        "prompt": "Give Kip 3 quick jumping jacks to get your blood moving! 🤸‍♀️"
+    },
+    {
+        "type": "imagination_prompt",
+        "prompt": "Close your eyes for 3 seconds and imagine you are sitting on a warm beach. 🏖️"
+    },
+    {
+        "type": "breathing_beat",
+        "prompt": "Follow Kip's breathing bounce: breathe in... and breathe out... 🌬️"
+    }
+]
+
+# Static Kip Narration Fallback Library
+KIP_FALLBACK_REASONING = {
+    "Low": [
+        "You're doing great! Let's keep this momentum going.",
+        "Awesome job on that question! You've got this.",
+        "That was smooth! Kip is cheering you on."
+    ],
+    "Medium": [
+        "Mistakes are just proof that you are trying and growing! Keep pushing.",
+        "Take a deep breath. You're making progress with every attempt.",
+        "Almost there! Try looking at it from a fresh angle."
+    ],
+    "High": [
+        "Whew, that was a tough one! Let's pause, take a quick break, and try an easier one.",
+        "Kip thinks we should shake things up with a reset before we try again. You're doing awesome!",
+        "Don't worry about the mistakes—every challenge makes your brain stronger! Let's do a reset."
+    ]
+}
+
+def predict_frustration_level(retry_count, time_taken, tab_switches, mouse_idle_time, typing_pauses, used_visual_toggle):
+    """
+    Layer 1: Frustration Prediction
+    Uses Decision Tree if loaded, otherwise falls back to a rule-based mock model.
+    """
+    if clf is not None:
+        try:
+            used_vt = 1 if used_visual_toggle else 0
+            features = [[retry_count, time_taken, tab_switches, mouse_idle_time, typing_pauses, used_vt]]
+            pred = clf.predict(features)[0]
+            mapping = {0: "Low", 1: "Medium", 2: "High"}
+            return mapping.get(pred, "Low")
+        except Exception as e:
+            print(f"Error running model prediction: {e}. Using rule-based fallback.")
+            
+    # Rule-based fallback model (Varies realistically for testing / offline devs)
+    if retry_count >= 3 or tab_switches >= 3:
+        return "High"
+    elif retry_count >= 1 or mouse_idle_time > 8.0 or typing_pauses >= 3:
+        return random.choices(["Medium", "High", "Low"], weights=[0.70, 0.20, 0.10])[0]
+    else:
+        return random.choices(["Low", "Medium"], weights=[0.85, 0.15])[0]
+
+def verify_frustration_with_llm(predicted_label, retry_count, time_taken, tab_switches, mouse_idle_time, typing_pauses, used_visual_toggle):
+    """
+    Layer 2: LLM Verification (Sanity Checker)
+    Double-checks classifier prediction against raw numbers using Gemini 1.5 Flash.
+    """
+    if not GEMINI_API_KEY:
+        return predicted_label
+        
+    prompt = f"""
+    You are a cognitive validation service for an adaptive learning companion app.
+    Verify if the predicted frustration level matches the evidence.
+    
+    Classifier Prediction: {predicted_label}
+    
+    Raw User Telemetry:
+    - Retries: {retry_count}
+    - Time taken on question: {time_taken:.2f} seconds
+    - Tab switches (distraction indicator): {tab_switches}
+    - Mouse idle time: {mouse_idle_time:.2f} seconds
+    - Long typing pauses: {typing_pauses}
+    - Used visual toggle helper: {used_visual_toggle}
+    
+    Rules:
+    - If the user had 0 or 1 retries, and normal time taken (less than 20 seconds), and low idle/pauses, the frustration MUST be Low.
+    - If the user has 3+ retries, or very high idle time (>15 seconds), they are struggling (frustration is Medium or High).
+    - If the classifier predicted High but the user got the question right on the first try with no struggle, correct it to Low.
+    
+    Output ONLY one word: "Low", "Medium", or "High". Do not add any punctuation, markdown, or extra text.
+    """
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=5,
+                temperature=0.0
+            ),
+            request_options={"timeout": 1.5}
+        )
+        verified_label = response.text.strip()
+        if verified_label in ["Low", "Medium", "High"]:
+            return verified_label
+    except Exception as e:
+        print(f"Gemini verification failed or timed out: {e}. Falling back to prediction: {predicted_label}")
+        
+    return predicted_label
+
+def get_static_fallback_narration(frustration, sub_skill):
+    """Fallback pre-written Kip messages matched to the student's sub-skill and frustration."""
+    if frustration == "Low":
+        return random.choice(KIP_FALLBACK_REASONING["Low"])
+    elif frustration == "Medium":
+        if "math" in str(sub_skill).lower() or "subtraction" in str(sub_skill).lower() or "fraction" in str(sub_skill).lower():
+            return f"Math is all about practice, and taking your time is your superpower! Kip is proud of you."
+        return random.choice(KIP_FALLBACK_REASONING["Medium"])
+    else:
+        return random.choice(KIP_FALLBACK_REASONING["High"])
+
 def init_db_if_needed():
     global db_initialized, use_postgres
     if db_initialized:
@@ -201,12 +353,61 @@ def get_next_question():
     questions = load_questions()
     asked_set = set(session["asked_ids"])
     
-    # Find the next question that hasn't been asked in this session
+    # 1. Fetch latest log record for this user to check if they struggled
+    latest_record = None
+    if use_postgres:
+        conn = None
+        try:
+            import psycopg2
+            from psycopg2.extras import RealDictCursor
+            conn = psycopg2.connect(DATABASE_URL, connect_timeout=3)
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT * FROM session_logs 
+                    WHERE participant_id = %s 
+                    ORDER BY id DESC LIMIT 1
+                """, (participant_id,))
+                row = cur.fetchone()
+                if row:
+                    latest_record = dict(row)
+        except Exception as e:
+            print(f"Error fetching latest log for routing: {e}")
+        finally:
+            if conn:
+                conn.close()
+    else:
+        # JSON fallback
+        logs = load_logs()
+        p_logs = [l for l in logs if l.get("participant_id") == participant_id]
+        if p_logs:
+            latest_record = p_logs[-1]
+            
+    # 2. Adaptive Routing: if frustration was High, scale down difficulty on same sub_skill
     next_q = None
-    for q in questions:
-        if q["id"] not in asked_set:
-            next_q = q
-            break
+    if latest_record and latest_record.get("frustration_label") == "High":
+        failed_q_id = latest_record.get("question_id")
+        failed_q = next((q for q in questions if q["id"] == failed_q_id), None)
+        if failed_q:
+            sub_skill = failed_q.get("sub_skill")
+            if failed_q.get("difficulty") == "hard":
+                difficulty_preference = ["medium", "easy"]
+            else:
+                difficulty_preference = ["easy"]
+                
+            for diff in difficulty_preference:
+                for q in questions:
+                    if q["id"] not in asked_set and q.get("sub_skill") == sub_skill and q.get("difficulty") == diff:
+                        next_q = q
+                        break
+                if next_q:
+                    break
+                    
+    # 3. Fallback: Find the next unasked question in the standard sequence
+    if not next_q:
+        for q in questions:
+            if q["id"] not in asked_set:
+                next_q = q
+                break
             
     if not next_q:
         return jsonify({
@@ -314,6 +515,18 @@ def submit_answer():
     if not is_correct:
         session["retry_counts"][q_id_str] = retry_count + 1
         
+    # Detect frustration using the 2-Layer AI engine if manual label is not provided
+    detected_frustration = frustration_label
+    if not detected_frustration:
+        # Layer 1: Decision Tree prediction
+        pred_frustration = predict_frustration_level(
+            retry_count, time_taken, tab_switches, mouse_idle_time, typing_pauses, used_visual_toggle
+        )
+        # Layer 2: LLM Verification (Sanity checker)
+        detected_frustration = verify_frustration_with_llm(
+            pred_frustration, retry_count, time_taken, tab_switches, mouse_idle_time, typing_pauses, used_visual_toggle
+        )
+        
     # Log the complete session records
     log_record = {
         "participant_id": participant_id,
@@ -326,13 +539,14 @@ def submit_answer():
         "backspaces": backspaces,
         "used_visual_toggle": used_visual_toggle,
         "visual_level_used": visual_level_used,
-        "frustration_label": frustration_label,
+        "frustration_label": detected_frustration,
         "correct": is_correct,
         "retry_count": retry_count,
         "time_taken": round(time_taken, 2),
         "sub_skill": question["sub_skill"],
         "difficulty": question["difficulty"],
-        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "data_source": data.get("data_source", "real")
     }
     
     save_log_record(log_record)
@@ -341,10 +555,18 @@ def submit_answer():
     session_state.clear()
     session_state.update(session)
     
+    trigger_reset_mission = (detected_frustration == "High")
+    reset_mission = None
+    if trigger_reset_mission:
+        reset_mission = random.choice(RESET_MISSIONS_POOL)
+    
     return jsonify({
         "correct": is_correct,
         "correct_answer": question["answer"],
-        "retry_count_after": session["retry_counts"].get(q_id_str, 0)
+        "retry_count_after": session["retry_counts"].get(q_id_str, 0),
+        "frustration_level": detected_frustration,
+        "trigger_reset_mission": trigger_reset_mission,
+        "reset_mission": reset_mission
     })
 
 @app.route('/get-dashboard-data', methods=['GET'])
@@ -463,6 +685,99 @@ def reset_session():
         "success": True,
         "message": f"In-memory and persistent session logs have been reset for {participant_id}."
     })
+
+@app.route('/get-kip-reasoning', methods=['GET'])
+def get_kip_reasoning():
+    participant_id = request.args.get('participant_id', 'Unknown')
+    
+    # Query database for the latest log record
+    latest_record = None
+    if use_postgres:
+        conn = None
+        try:
+            import psycopg2
+            from psycopg2.extras import RealDictCursor
+            conn = psycopg2.connect(DATABASE_URL, connect_timeout=3)
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT * FROM session_logs 
+                    WHERE participant_id = %s 
+                    ORDER BY id DESC LIMIT 1
+                """, (participant_id,))
+                row = cur.fetchone()
+                if row:
+                    latest_record = dict(row)
+        except Exception as e:
+            print(f"Error fetching latest log: {e}")
+        finally:
+            if conn:
+                conn.close()
+    else:
+        # JSON fallback
+        logs = load_logs()
+        p_logs = [l for l in logs if l.get("participant_id") == participant_id]
+        if p_logs:
+            latest_record = p_logs[-1]
+            
+    if not latest_record:
+        return jsonify({
+            "frustration_level": "Low",
+            "reasoning": "Hi! I'm Kip, your learning buddy. Let's do some questions together!"
+        })
+        
+    verified_frustration = latest_record.get("frustration_label", "Low")
+    sub_skill = latest_record.get("sub_skill", "general")
+    retry_count = latest_record.get("retry_count", 0)
+    time_taken = latest_record.get("time_taken", 0.0)
+    
+    # Check if Gemini key is present
+    if not GEMINI_API_KEY:
+        reasoning = get_static_fallback_narration(verified_frustration, sub_skill)
+        return jsonify({
+            "frustration_level": verified_frustration,
+            "reasoning": reasoning
+        })
+        
+    # Query Gemini for Kip's narration
+    prompt = f"""
+    You are Kip, a friendly, supportive AI learning buddy mascot on a student's screen.
+    Analyze the student's latest question performance and explain your thoughts in a warm, encouraging, conversational tone.
+    
+    Latest Question Details:
+    - Subject Sub-skill: {sub_skill}
+    - Verified student frustration level: {verified_frustration}
+    - Attempts/Retries on this question: {retry_count}
+    - Time spent: {time_taken:.1f} seconds
+    
+    Guidelines:
+    - Speak directly to the student as Kip (e.g. "I noticed you took your time...", "Hey, math can be tricky but you're doing great!").
+    - Keep it short: exactly 1 or 2 sentences.
+    - Be empathetic and non-judgmental. If they are frustrated, explain that it's okay to make mistakes.
+    - Do not mention technical terms like "classifier", "telemetry", "model", or "verification".
+    """
+    
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=60,
+                temperature=0.7
+            ),
+            request_options={"timeout": 1.5}
+        )
+        reasoning = response.text.strip()
+        return jsonify({
+            "frustration_level": verified_frustration,
+            "reasoning": reasoning
+        })
+    except Exception as e:
+        print(f"Gemini reasoning call failed or timed out: {e}")
+        reasoning = get_static_fallback_narration(verified_frustration, sub_skill)
+        return jsonify({
+            "frustration_level": verified_frustration,
+            "reasoning": reasoning
+        })
 
 if __name__ == '__main__':
     # Run server on port 5000

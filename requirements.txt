@@ -2,3 +2,6 @@ Flask>=3.0.0
 Flask-CORS>=4.0.0
 gunicorn>=21.2.0
 psycopg2-binary>=2.9.0
+scikit-learn>=1.0.0
+joblib>=1.1.0
+google-generativeai>=0.3.0

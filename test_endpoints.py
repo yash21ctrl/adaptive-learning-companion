@@ -202,10 +202,10 @@ class TestAdaptiveLearningCompanion(unittest.TestCase):
         csv_text = csv_response.data.decode('utf-8')
         reader = csv.reader(csv_text.splitlines())
         headers = next(reader)
-        self.assertEqual(headers, ['participant_id', 'device_type', 'retry_count', 'time_taken', 'tab_switches', 'mouse_idle_time', 'typing_pauses', 'used_visual_toggle', 'frustration_label'])
+        self.assertEqual(headers, ['participant_id', 'device_type', 'retry_count', 'time_taken', 'tab_switches', 'mouse_idle_time', 'typing_pauses', 'used_visual_toggle', 'frustration_label', 'data_source'])
         
         rows = list(reader)
-        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows), 3)
         self.assertEqual(rows[0][0], 'TestSubject_Multi')
         self.assertEqual(rows[0][1], 'Unknown')  # Defaults to Unknown since test did not pass device_type
         self.assertEqual(rows[0][8], 'Medium')
